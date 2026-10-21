@@ -19,6 +19,23 @@ def print_comparison(winner):
         print(f"{winner} has the greater total EVA duration.")
 
 
+def print_period_heading(start_year, end_year):
+    print(f"EVA activity from {start_year} to {end_year}:")
+
+
+def print_activity_summary(country, summary):
+    if summary["average"] is None:
+        average = "unavailable"
+    else:
+        average = f"{summary['average']:.2f} hours"
+    print(f"  {country}: {summary['count']} EVAs, "
+          f"total {summary['total']:.2f} hours, average {average}")
+
+
+def print_message(message):
+    print(message)
+
+
 def plot_cumulative(dates, cumulative_hours, output_path="cumulative_duration.png"):
     plt.plot(dates, cumulative_hours)
     plt.xlabel("Year")

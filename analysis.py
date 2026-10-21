@@ -30,6 +30,24 @@ def category_percentages(counts):
     }
 
 
+def count_evas(records):
+    return len(records)
+
+
+def average_duration(records):
+    if not records:
+        return None
+    return total_duration(records) / count_evas(records)
+
+
+def summarise_activity(records):
+    return {
+        "count": count_evas(records),
+        "total": total_duration(records),
+        "average": average_duration(records),
+    }
+
+
 def compare_totals(country_a, total_a, country_b, total_b):
     if total_a > total_b:
         return country_a

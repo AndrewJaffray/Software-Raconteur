@@ -43,3 +43,20 @@ def prepare_records(raw_data):
 def filter_by_countries(records, countries):
     wanted = {normalise_country(country) for country in countries}
     return [record for record in records if normalise_country(record.country) in wanted]
+
+
+def parse_year_range(start_text, end_text):
+    try:
+        start_year, end_year = int(start_text), int(end_text)
+    except ValueError:
+        return None
+    if start_year > end_year:
+        return None
+    return start_year, end_year
+
+
+def filter_by_year_range(records, start_year, end_year):
+    return [
+        record for record in records
+        if record.date and start_year <= record.date.year <= end_year
+    ]

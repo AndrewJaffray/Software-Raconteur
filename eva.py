@@ -2,7 +2,29 @@
 import analysis
 import presentation
 from data_loader import load_eva_data
-from preparation import filter_by_countries, prepare_records
+from preparation import filter_by_countries, filter_by_year_range, parse_year_range, prepare_records
+
+
+def compare_period(records, first_country, second_country):
+    year_range = parse_year_range(input("Enter the start year: "), input("Enter the end year: "))
+    if year_range is None:
+        presentation.print_message("Invalid year range.")
+        return
+
+    start_year, end_year = year_range
+    period_records = filter_by_year_range(records, start_year, end_year)
+
+    presentation.print_period_heading(start_year, end_year)
+    summaries = {}
+    for country in (first_country, second_country):
+        summaries[country] = analysis.summarise_activity(filter_by_countries(period_records, [country]))
+        presentation.print_activity_summary(country, summaries[country])
+
+    winner = analysis.compare_totals(
+        first_country, summaries[first_country]["total"],
+        second_country, summaries[second_country]["total"],
+    )
+    presentation.print_comparison(winner)
 
 
 def main():
@@ -25,6 +47,8 @@ def main():
 
     winner = analysis.compare_totals(first_country, totals[first_country], second_country, totals[second_country])
     presentation.print_comparison(winner)
+
+    compare_period(records, first_country, second_country)
 
     dates, cumulative_hours = analysis.cumulative_series(filter_by_countries(records, countries))
     presentation.plot_cumulative(dates, cumulative_hours)
