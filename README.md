@@ -31,6 +31,3 @@ python -m unittest -v
 - `presentation.py`: output and chart
 - `records.py`: the EvaRecord data type
 
-## Docs
-
-In `docs/`. ADR-001 is in `ADR-001.docx`; ADR-002 is in `Activity5.docx`.
