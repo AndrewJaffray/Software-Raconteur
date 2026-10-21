@@ -1,84 +1,34 @@
-import json
-from datetime import datetime 
-import matplotlib.pyplot as plt
 
-with open("eva-data.json", "r", encoding="utf-8") as file:
-    eva_data = json.load(file)
+import analysis
+import presentation
+from data_loader import load_eva_data
+from preparation import filter_by_countries, prepare_records
 
-first_country = input("Enter the first country to report: ").strip()
-second_country = input("Enter the second country to report: ").strip()
-selected_countries = (first_country.casefold(), second_country.casefold())
-records = []
-country_totals = {first_country.casefold(): 0, second_country.casefold(): 0}
-category_counts = {
-    country: {"Short": 0, "Standard": 0, "Long": 0}
-    for country in selected_countries
-}
 
-for eva in eva_data:
-    country = eva.get("country", "").strip()
-    country_key = country.casefold()
-    if country_key not in selected_countries:
-        continue
+def main():
+    records = prepare_records(load_eva_data())
 
-    date_text = eva.get("date")
-    duration_text = eva.get("duration")
+    first_country = input("Enter the first country to report: ").strip()
+    second_country = input("Enter the second country to report: ").strip()
+    countries = (first_country, second_country)
 
-    if not duration_text:
-        continue
+    totals = {
+        country: analysis.total_duration(filter_by_countries(records, [country]))
+        for country in countries
+    }
+    for country in countries:
+        presentation.print_total(country, totals[country])
 
-    hours, minutes = map(int, duration_text.split(":"))
-    duration_hours = hours + minutes / 60
-    country_totals[country_key] += duration_hours
+    for country in countries:
+        counts = analysis.categorise_durations(filter_by_countries(records, [country]))
+        presentation.print_categories(country, counts, analysis.category_percentages(counts))
 
-    if duration_hours < 4:
-        category_counts[country_key]["Short"] += 1
-    elif duration_hours < 7:
-        category_counts[country_key]["Standard"] += 1
-    else:
-        category_counts[country_key]["Long"] += 1
+    winner = analysis.compare_totals(first_country, totals[first_country], second_country, totals[second_country])
+    presentation.print_comparison(winner)
 
-    if not date_text:
-        continue
+    dates, cumulative_hours = analysis.cumulative_series(filter_by_countries(records, countries))
+    presentation.plot_cumulative(dates, cumulative_hours)
 
-    date = datetime.fromisoformat(date_text)
-    records.append((date, duration_hours))
 
-first_total = country_totals[first_country.casefold()]
-second_total = country_totals[second_country.casefold()]
-print(f"Total EVA duration for {first_country}: {first_total:.2f} hours")
-print(f"Total EVA duration for {second_country}: {second_total:.2f} hours")
-
-for country_name in (first_country, second_country):
-    country_key = country_name.casefold()
-    counts = category_counts[country_key]
-    total_evas = sum(counts.values())
-    print(f"EVA duration categories for {country_name}:")
-    for category, count in counts.items():
-        percentage = count / total_evas * 100 if total_evas else 0
-        print(f"  {category}: {count} ({percentage:.2f}%)")
-
-if first_total > second_total:
-    print(f"{first_country} has the greater total EVA duration.")
-elif second_total > first_total:
-    print(f"{second_country} has the greater total EVA duration.")
-else:
-    print("Both countries have the same total EVA duration.")
-
-records.sort(key=lambda record: record[0])
-
-dates = []
-cumulative_hours = []
-chart_total_hours = 0
-
-for date, duration_hours, in records:
-    chart_total_hours += duration_hours
-    dates.append(date)
-    cumulative_hours.append(chart_total_hours)
-
-plt.plot(dates, cumulative_hours)
-plt.xlabel("Year")
-plt.ylabel("Cumulative EVA duration (hours)")
-plt.tight_layout()
-plt.savefig("cumulative_duration.png")
-plt.show()
+if __name__ == "__main__":
+    main()
